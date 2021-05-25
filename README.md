@@ -46,7 +46,7 @@ REXP = /\.localhost:3000/
 
 ## Usage
 
-This server is to be consumed by a front-end application - namely the Spotify clone at this [repo](https://github.com/JL978/spotify-clone-client)
+This server is to be consumed by a front-end application - namely the Spotify clone at this [repo](https://github.com/jamesdoraiii/playlistr-client)
 
 The following endpoints are available
 
