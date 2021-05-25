@@ -1,22 +1,16 @@
 {
-  "name": "spotify-frontend-clone",
+  "name": "playlistr-spotify-server",
   "version": "1.0.0",
-  "description": "Clone of Spotify Front-End using ReactJS",
+  "description": "Spotify server for playlistr client app.",
   "main": "index.js",
   "scripts": {
     "start": "node server",
     "dev": "nodemon server"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/JL978/Spotify-FrontEnd-Clone.git"
-  },
+ 
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/JL978/Spotify-FrontEnd-Clone/issues"
-  },
-  "homepage": "https://github.com/JL978/Spotify-FrontEnd-Clone#readme",
+
   "dependencies": {
     "axios": "^0.19.2",
     "cookie-parser": "^1.4.5",
