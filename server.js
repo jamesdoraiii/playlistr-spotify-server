@@ -3,6 +3,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
+const playlistr_gqp_server = process.env.PLAYLISTR_GQL_SERVER;
 
 const { client_auth, authed_header } = require("./utils/client-auth");
 const randString = require("./utils/random");
@@ -11,15 +12,18 @@ const axios = require("axios");
 const qs = require("qs");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-var request = require("request");
+const request = require("request");
 const express = require("express");
 const http = require("http");
+const bcrypt = require("bcryptjs");
+const fetch = require("node-fetch");
+const { resolveSoa } = require("dns");
 
 const PORT = process.env.PORT || 4000;
 const app = express();
 const server = http.createServer(app);
 
-var corsOptions = {
+const corsOptions = {
   origin: [process.env.FRONT_URI, process.env.REXP],
   credentials: true,
 };
@@ -184,6 +188,91 @@ app.post("/refresh_token", (req, res) => {
 app.get("/logout", (req, res) => {
   res.clearCookie(refreshKey, cookieOption);
   res.status(200).send("logged out");
+});
+
+app.post("/sign-in", (req, res) => {
+  fetch(playlistr_gqp_server, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `query GetUserByEmail {
+        userByEmail(email: "${req.body.email}") {
+          passwordHash
+          email
+          spotifyUserId
+          userId
+        }
+      }
+      `,
+    }),
+  })
+    .then((result) => {
+      return result.json();
+    })
+    .then(
+      (response) => {
+        const compareUser = response.data.userByEmail;
+        if (compareUser) {
+          bcrypt.compare(req.body.password, compareUser.passwordHash),
+            function (err, matches) {
+              if (matches) {
+                res.send(200, "Compare success! You are logged in!");
+              } else {
+                res.send(502, { error: "Failed to authenticate." });
+              }
+            };
+        } else {
+          res.send(500, "No User Found");
+        }
+      },
+      (err) => {
+        res.send(500, err.message);
+      }
+    );
+});
+
+app.post("/sign-up", (req, res) => {
+  var email = req.body.email;
+  var password = req.body.password;
+  var spotifyUserId = req.body.spotifyUserId;
+
+  fetch(playlistr_gqp_server, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `
+      mutation CreateUser {
+        createUser(
+          input: {
+            user: { email: "${email}", passwordHash: "${bcrypt.hashSync(
+        password,
+        10
+      )}", spotifyUserId: "${spotifyUserId}" }
+          }
+        ) {
+          user {
+            email
+          }
+        }
+      }
+    `,
+    }),
+  })
+    .then((result) => {
+      return result.json();
+    })
+    .then(
+      (data) => {
+        res.send(data);
+      },
+      (err) => {
+        res.send(500, err.message);
+      }
+    );
 });
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
