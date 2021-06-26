@@ -215,14 +215,17 @@ app.post("/sign-in", (req, res) => {
       (response) => {
         const compareUser = response.data.userByEmail;
         if (compareUser) {
-          bcrypt.compare(req.body.password, compareUser.passwordHash),
+          bcrypt.compare(
+            req.body.password,
+            compareUser.passwordHash,
             function (err, matches) {
               if (matches) {
                 res.send(200, "Compare success! You are logged in!");
               } else {
                 res.send(502, { error: "Failed to authenticate." });
               }
-            };
+            }
+          );
         } else {
           res.send(500, "No User Found");
         }
