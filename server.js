@@ -17,7 +17,6 @@ const express = require("express");
 const http = require("http");
 const bcrypt = require("bcryptjs");
 const fetch = require("node-fetch");
-const { resolveSoa } = require("dns");
 
 const PORT = process.env.PORT || 4000;
 const app = express();
@@ -220,18 +219,22 @@ app.post("/sign-in", (req, res) => {
             compareUser.passwordHash,
             function (err, matches) {
               if (matches) {
-                res.send(200, "Compare success! You are logged in!");
+                res.status(200).send(response.data.userByEmail);
               } else {
-                res.send(502, { error: "Failed to authenticate." });
+                res.status(401).send({
+                  error: "Failed to authenticate. Incorrect password.",
+                });
               }
             }
           );
         } else {
-          res.send(500, "No User Found");
+          res.status(401).send({ error: "No User Found" });
         }
       },
       (err) => {
-        res.send(500, err.message);
+        res
+          .status(500)
+          .send({ error: "Unable to look up user. Server error." });
       }
     );
 });
@@ -239,7 +242,6 @@ app.post("/sign-in", (req, res) => {
 app.post("/sign-up", (req, res) => {
   var email = req.body.email;
   var password = req.body.password;
-  var spotifyUserId = req.body.spotifyUserId;
 
   fetch(playlistr_gqp_server, {
     method: "POST",
@@ -254,11 +256,13 @@ app.post("/sign-up", (req, res) => {
             user: { email: "${email}", passwordHash: "${bcrypt.hashSync(
         password,
         10
-      )}", spotifyUserId: "${spotifyUserId}" }
+      )}" }
           }
         ) {
           user {
+            userId
             email
+            spotifyUserId
           }
         }
       }
